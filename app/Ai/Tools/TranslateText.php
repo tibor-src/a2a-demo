@@ -26,7 +26,7 @@ final class TranslateText implements Tool
         $language = is_string($language) && $language !== '' ? $language : 'Spanish';
 
         return agent(
-            instructions: "Translate the user text into {$language}. Return only the translation, with no preamble.",
+            instructions: "Translate the user text into {$language}. Write only {$language}. Return only the translation, with no preamble, labels, or quotation marks.",
         )->prompt($text, model: DemoAi::model())->text;
     }
 

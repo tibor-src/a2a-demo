@@ -47,6 +47,7 @@ it('documents openrouter first in the env example without storing a key', functi
         ->and($example)->toContain('AI_DEFAULT_PROVIDER=openrouter')
         ->and($example)->toContain('A2A_DEMO_MODEL=meta-llama/llama-3.1-8b-instruct')
         ->and($example)->toContain('OPENROUTER_API_KEY=')
+        ->and($example)->toContain('A2A_STORE=file')
         ->and($example)->toContain('# OPENROUTER_URL=https://openrouter.ai/api/v1')
         ->and($example)->toContain('OPENAI_API_KEY=')
         ->and($example)->not->toContain('OPENROUTER_API_KEY=sk-');
@@ -66,5 +67,6 @@ it('documents openrouter first in the real API key readme section', function ():
         ->and($readme)->toContain('worker.a2a-demo.test')
         ->and($readme)->toContain('coordinator.a2a-demo.test')
         ->and($readme)->toContain('php artisan test --group=live')
+        ->and($readme)->toContain('A2A_STORE=file')
         ->and(strpos((string) $readme, 'OPENROUTER_API_KEY'))->toBeLessThan(strpos((string) $readme, 'To use OpenAI instead'));
 });

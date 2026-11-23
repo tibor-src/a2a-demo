@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 use App\A2A\A2AText;
-use TiborSrc\A2A\Exceptions\TaskNotFoundException;
+use App\A2A\LanguageHints;
+use App\A2A\WorkerMarker;
 use TiborSrc\A2A\Id;
 use TiborSrc\A2A\Laravel\Facades\A2A;
 use TiborSrc\A2A\Types\GetExtendedAgentCardRequest;
@@ -12,7 +13,10 @@ use TiborSrc\A2A\Types\Message;
 use TiborSrc\A2A\Types\Part;
 use TiborSrc\A2A\Types\Role;
 use TiborSrc\A2A\Types\SendMessageRequest;
+use TiborSrc\A2A\Types\StreamResponse;
 use TiborSrc\A2A\Types\Task;
+use TiborSrc\A2A\Types\TaskState;
+use TiborSrc\A2A\Types\TaskStatusUpdateEvent;
 
 it('runs the full user > coordinator > worker chain over real HTTPS', function (): void {
     $coordinatorUrl = rtrim((string) env('A2A_COORDINATOR_URL', 'https://coordinator.a2a-demo.test'), '/');
@@ -35,17 +39,16 @@ it('runs the full user > coordinator > worker chain over real HTTPS', function (
     )));
 
     $text = A2AText::fromResponse($response);
-    expect($text)->toContain('Summary:');
+    $spanish = A2AText::translationSection($text, 'Spanish');
 
-    if ($response->task instanceof Task) {
-        try {
-            $task = $client->getTask(new GetTaskRequest($response->task->id));
-            expect($task->id)->toBe($response->task->id);
-        } catch (TaskNotFoundException) {
-            // Memory store is per PHP process; Herd FPM may not round-trip GetTask.
-            expect($response->task->id)->not->toBeEmpty();
-        }
-    }
+    expect($text)->toContain('Summary:')
+        ->and($text)->toContain(WorkerMarker::line())
+        ->and(LanguageHints::matches($spanish, LanguageHints::spanish()) ? 'matched' : 'unmatched: '.$spanish)->toBe('matched');
+
+    expect($response->task)->toBeInstanceOf(Task::class);
+    $task = $client->getTask(new GetTaskRequest($response->task->id));
+    expect($task->id)->toBe($response->task->id)
+        ->and($task->status->state)->toBe(TaskState::Completed);
 
     $events = $client->sendStreamingMessage(new SendMessageRequest(new Message(
         messageId: Id::uuid(),
@@ -54,6 +57,41 @@ it('runs the full user > coordinator > worker chain over real HTTPS', function (
     )));
 
     expect($events)->not->toBeEmpty();
+
+    $hasText = false;
+    $terminal = null;
+    $streamed = '';
+
+    foreach ($events as $event) {
+        expect($event)->toBeInstanceOf(StreamResponse::class);
+
+        $update = $event->statusUpdate;
+
+        if (! $update instanceof TaskStatusUpdateEvent) {
+            continue;
+        }
+
+        if ($update->status->message instanceof Message) {
+            $chunk = A2AText::fromMessage($update->status->message);
+
+            if ($chunk !== '') {
+                $hasText = true;
+                $streamed = $chunk;
+            }
+        }
+
+        if ($update->final || $update->status->state->isTerminal()) {
+            $terminal = $update;
+        }
+    }
+
+    expect($hasText)->toBeTrue()
+        ->and($terminal)->toBeInstanceOf(TaskStatusUpdateEvent::class)
+        ->and($terminal->status->state)->toBe(TaskState::Completed)
+        ->and($streamed)->toContain(WorkerMarker::line());
+
+    $french = A2AText::translationSection($streamed, 'French');
+    expect(LanguageHints::matches($french, LanguageHints::french()) ? 'matched' : 'unmatched: '.$french)->toBe('matched');
 })->skip(fn (): bool => a2aDemoMissingLiveProviderKey(), a2aDemoLiveSkipReason())->group('live');
 
 it('serves both agent cards over https on the live hosts', function (): void {

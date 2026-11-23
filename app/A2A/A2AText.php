@@ -60,4 +60,16 @@ final class A2AText
 
         return implode("\n", $chunks);
     }
+
+    public static function translationSection(string $composed, string $language): string
+    {
+        $label = 'Translation ('.$language.'):';
+        $position = mb_stripos($composed, $label);
+
+        if ($position === false) {
+            return trim(WorkerMarker::strip($composed));
+        }
+
+        return trim(WorkerMarker::strip(mb_substr($composed, $position + mb_strlen($label))));
+    }
 }

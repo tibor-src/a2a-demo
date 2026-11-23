@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\A2A\WorkerMarker;
 use App\Ai\Agents\WorkerAgent;
 
 it('sends a message to the worker and completes a faked summarize', function (): void {
@@ -17,7 +18,8 @@ it('sends a message to the worker and completes a faked summarize', function ():
     ])->assertOk()->json();
 
     expect($response['result']['task']['status']['state'])->toBe('TASK_STATE_COMPLETED')
-        ->and($response['result']['task']['status']['message']['parts'][0]['text'])->toBe('A short summary of Laravel.');
+        ->and($response['result']['task']['status']['message']['parts'][0]['text'])->toContain('A short summary of Laravel.')
+        ->and($response['result']['task']['status']['message']['parts'][0]['text'])->toContain(WorkerMarker::line());
 });
 
 it('gets a worker task after send', function (): void {

@@ -25,8 +25,8 @@ return [
     'agent' => is_string($agent) && $agent !== ''
         ? $agent
         : ($role === 'worker' ? WorkerAgent::class : CoordinatorAgent::class),
-    'store' => env('A2A_STORE', 'memory'),
-    'file_store' => env('A2A_FILE_STORE'),
+    'store' => env('A2A_STORE', 'file'),
+    'file_store' => env('A2A_FILE_STORE') ?: storage_path('app/a2a-tasks.json'),
     'middleware' => [],
     'queue' => [
         'enabled' => (bool) env('A2A_QUEUE', false),

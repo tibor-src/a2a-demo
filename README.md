@@ -73,9 +73,11 @@ A2A_WORKER_URL=https://worker.a2a-demo.test
 A2A_COORDINATOR_URL=https://coordinator.a2a-demo.test
 A2A_BASE_URL=https://coordinator.a2a-demo.test
 A2A_ROLE=coordinator
-A2A_STORE=memory
+A2A_STORE=file
 A2A_QUEUE=false
 ```
+
+`A2A_STORE=file` persists A2A tasks in `storage/app/a2a-tasks.json` so `GetTask` works across Herd PHP-FPM workers. Leave `A2A_FILE_STORE` empty to use that path. Default `php artisan test` still forces an in-memory store.
 
 Requests to `worker.a2a-demo.test` serve `WorkerAgent`. Requests to `coordinator.a2a-demo.test` serve `CoordinatorAgent`. Artisan uses `A2A_ROLE` / `A2A_COORDINATOR_URL`.
 
@@ -128,7 +130,7 @@ curl -sS -X POST https://coordinator.a2a-demo.test/ \
 
 9. Open `https://coordinator.a2a-demo.test`, confirm both cards, and submit the Blade form. That POST uses `A2A::client` against the coordinator HTTPS URL.
 
-Live Pest (not run by default). It runs when the key for the configured provider is present (`OPENROUTER_API_KEY` when `AI_DEFAULT_PROVIDER` is `openrouter`, `OPENAI_API_KEY` when it is `openai`) and auto-skips otherwise:
+Live Pest (not run by default). It runs when the key for the configured provider is present (`OPENROUTER_API_KEY` when `AI_DEFAULT_PROVIDER` is `openrouter`, `OPENAI_API_KEY` when it is `openai`) and auto-skips otherwise. The live group hits the Herd HTTPS hosts and asserts that the coordinator forwarded the worker marker, that Spanish/French translations look like those languages, that streaming includes text and a completed terminal state, and that `GetTask` round-trips against the file task store.
 
 ```bash
 php artisan test --group=live

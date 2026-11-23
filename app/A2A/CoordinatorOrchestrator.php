@@ -38,13 +38,24 @@ final class CoordinatorOrchestrator
             "Use the {$summarize->id} skill. Summarize the following text:\n\n{$parsed->text}",
         );
 
+        $marker = WorkerMarker::extract($summary);
+        $summaryText = WorkerMarker::strip($summary);
+
         $translation = $this->delegate(
             $clientUrl,
             $translate,
-            "Use the {$translate->id} skill. Translate the following summary into {$parsed->language}:\n\n{$summary}",
+            "Use the {$translate->id} skill. Translate the following summary into {$parsed->language}:\n\n{$summaryText}",
         );
 
-        return "Summary:\n{$summary}\n\nTranslation ({$parsed->language}):\n{$translation}";
+        $marker ??= WorkerMarker::extract($translation);
+        $translationText = WorkerMarker::strip($translation);
+        $composed = "Summary:\n{$summaryText}\n\nTranslation ({$parsed->language}):\n{$translationText}";
+
+        if ($marker !== null) {
+            $composed .= "\n".WorkerMarker::line($marker);
+        }
+
+        return $composed;
     }
 
     public function workerUrl(): string

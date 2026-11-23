@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\A2A\CoordinatorOrchestrator;
+use App\A2A\WorkerMarker;
 use App\Ai\Agents\WorkerAgent;
 use TiborSrc\A2A\Laravel\Facades\A2A;
 use TiborSrc\A2A\Types\SendMessageRequest;
@@ -61,4 +62,22 @@ it('asserts outbound coordinator A2A uses the configured https worker base URL',
     $fake->assertSent('https://worker.a2a-demo.test', function (SendMessageRequest $request): bool {
         return str_contains((string) $request->message->parts[0]->text, 'Translate');
     });
+});
+
+it('forwards the worker marker in the composed coordinator result', function (): void {
+    $this->serveCoordinator();
+
+    A2A::fake()
+        ->withCard('https://worker.a2a-demo.test', $this->workerCard())
+        ->respondWithText('https://worker.a2a-demo.test', WorkerMarker::append('A short summary of Laravel.'));
+
+    $text = app(CoordinatorOrchestrator::class)->compose(
+        'Summarize then translate into Spanish: Laravel is a PHP framework.',
+    );
+
+    expect($text)->toContain('Summary:')
+        ->and($text)->toContain('A short summary of Laravel.')
+        ->and($text)->toContain(WorkerMarker::line())
+        ->and($text)->toContain('Translation (Spanish):')
+        ->and(substr_count($text, WorkerMarker::line()))->toBe(1);
 });
