@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Ai\Agents;
 
+use App\A2A\DemoAi;
 use App\Ai\Tools\SummarizeText;
 use App\Ai\Tools\TranslateText;
 use Laravel\Ai\Contracts\Agent;
@@ -21,6 +22,16 @@ final class WorkerAgent implements Agent, Conversational, HasTools
     public function instructions(): string
     {
         return 'You are an A2A worker. Your only skills are summarizing text and translating text into a target language. Use the SummarizeText tool to summarize and the TranslateText tool (with target_language) to translate. Do not add other skills. Return only the result.';
+    }
+
+    public function provider(): string
+    {
+        return DemoAi::provider();
+    }
+
+    public function model(): string
+    {
+        return DemoAi::model();
     }
 
     /**

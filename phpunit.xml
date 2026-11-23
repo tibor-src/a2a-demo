@@ -43,5 +43,7 @@
         <env name="A2A_BASE_URL" value="https://coordinator.a2a-demo.test"/>
         <env name="A2A_WORKER_URL" value="https://worker.a2a-demo.test"/>
         <env name="A2A_COORDINATOR_URL" value="https://coordinator.a2a-demo.test"/>
+        <env name="AI_DEFAULT_PROVIDER" value="openrouter"/>
+        <env name="A2A_DEMO_MODEL" value="meta-llama/llama-3.1-8b-instruct"/>
     </php>
 </phpunit>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Ai\Tools;
 
+use App\A2A\DemoAi;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
@@ -26,7 +27,7 @@ final class TranslateText implements Tool
 
         return agent(
             instructions: "Translate the user text into {$language}. Return only the translation, with no preamble.",
-        )->prompt($text)->text;
+        )->prompt($text, model: DemoAi::model())->text;
     }
 
     /**

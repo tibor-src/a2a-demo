@@ -1,5 +1,6 @@
 <?php
 
+use App\A2A\DemoAi;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +45,16 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function a2aDemoMissingLiveProviderKey(): bool
 {
-    // ..
+    return DemoAi::missingLiveKey();
+}
+
+function a2aDemoLiveSkipReason(): string
+{
+    $provider = getenv('AI_DEFAULT_PROVIDER');
+    $provider = is_string($provider) && $provider !== '' ? $provider : 'openrouter';
+    $env = $provider === 'openai' ? 'OPENAI_API_KEY' : 'OPENROUTER_API_KEY';
+
+    return "Set {$env} to run the live HTTPS group.";
 }

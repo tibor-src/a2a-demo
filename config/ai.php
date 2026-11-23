@@ -13,7 +13,8 @@ return [
     |
     */
 
-    'default' => 'openai',
+    'default' => env('AI_DEFAULT_PROVIDER', 'openrouter'),
+    'demo_model' => env('A2A_DEMO_MODEL', 'meta-llama/llama-3.1-8b-instruct'),
     'default_for_images' => 'gemini',
     'default_for_audio' => 'openai',
     'default_for_transcription' => 'openai',
@@ -143,6 +144,12 @@ return [
         'openrouter' => [
             'driver' => 'openrouter',
             'key' => env('OPENROUTER_API_KEY'),
+            'url' => env('OPENROUTER_URL', 'https://openrouter.ai/api/v1'),
+            'models' => [
+                'text' => [
+                    'default' => env('A2A_DEMO_MODEL', 'meta-llama/llama-3.1-8b-instruct'),
+                ],
+            ],
         ],
 
         'typesafe' => [

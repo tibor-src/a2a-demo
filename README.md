@@ -108,25 +108,27 @@ curl -sS -X POST https://coordinator.a2a-demo.test/ \
 
 1. Complete **HTTPS / Herd setup** (`herd secure` on `worker.a2a-demo.test` and `coordinator.a2a-demo.test`).
 2. `cp .env.example .env` and `php artisan key:generate` if you have not already.
-3. Set a Laravel AI SDK provider key. The published `config/ai.php` default provider is `openai`, so set `OPENAI_API_KEY`. Other documented keys (`ANTHROPIC_API_KEY`, `XAI_API_KEY`, …) may also be listed in `.env.example`.
-4. Set `A2A_WORKER_URL=https://worker.a2a-demo.test` (or a remote `https://` worker) and `A2A_COORDINATOR_URL=https://coordinator.a2a-demo.test`.
-5. Hit both agent cards over HTTPS:
+3. Set `OPENROUTER_API_KEY` in `.env`. The default Laravel AI SDK provider is OpenRouter (`AI_DEFAULT_PROVIDER=openrouter`) via the `openrouter` driver. The default model is `meta-llama/llama-3.1-8b-instruct` (`A2A_DEMO_MODEL`). Optional `OPENROUTER_URL` overrides the driver's default `https://openrouter.ai/api/v1`. Never commit `.env` or paste a key into git, logs, or the README.
+4. To use OpenAI instead, set `AI_DEFAULT_PROVIDER=openai`, `OPENAI_API_KEY`, and an OpenAI model id in `A2A_DEMO_MODEL`. Keep the OpenAI provider config; do not remove it.
+5. Optional OpenRouter fallback (not the default): `google/gemma-4-31b-it:free`. Official caveats: `:free` variants are capped at 20 requests per minute and 50 requests per day; after purchasing at least $10 of credits (the higher cap starts at $9 to absorb top-up fees) the daily cap rises to 1,000; failed attempts count toward the daily cap; a negative account balance can block even free models until credits are added; free variants may have different rate limits or availability than paid versions; they are usually not suitable for production; if a `:free` model is listed in a `models` fallback array, a fallback to a paid model is billed. See [OpenRouter limits](https://openrouter.ai/docs/api_reference/limits), [free models](https://openrouter.ai/collections/free-models), and [free variants](https://openrouter.ai/docs/guides/routing/model-variants/free).
+6. Set `A2A_WORKER_URL=https://worker.a2a-demo.test` (or a remote `https://` worker) and `A2A_COORDINATOR_URL=https://coordinator.a2a-demo.test`.
+7. Hit both agent cards over HTTPS:
 
    ```bash
    curl -sS https://worker.a2a-demo.test/.well-known/agent-card.json | jq .name
    curl -sS https://coordinator.a2a-demo.test/.well-known/agent-card.json | jq .name
    ```
 
-6. Run the Artisan client. It calls the **coordinator** over HTTPS; the coordinator then summarizes and translates through the worker over HTTPS:
+8. Run the Artisan client. It calls the **coordinator** over HTTPS; the coordinator then summarizes and translates through the worker over HTTPS:
 
    ```bash
    php artisan a2a:demo "Laravel is a PHP framework for web artisans." --language=Spanish
    php artisan a2a:demo "Laravel is a PHP framework for web artisans." --language=French --stream
    ```
 
-7. Open `https://coordinator.a2a-demo.test`, confirm both cards, and submit the Blade form. That POST uses `A2A::client` against the coordinator HTTPS URL.
+9. Open `https://coordinator.a2a-demo.test`, confirm both cards, and submit the Blade form. That POST uses `A2A::client` against the coordinator HTTPS URL.
 
-Live Pest (skipped unless `OPENAI_API_KEY` is set; not run by default):
+Live Pest (not run by default). It runs when the key for the configured provider is present (`OPENROUTER_API_KEY` when `AI_DEFAULT_PROVIDER` is `openrouter`, `OPENAI_API_KEY` when it is `openai`) and auto-skips otherwise:
 
 ```bash
 php artisan test --group=live
